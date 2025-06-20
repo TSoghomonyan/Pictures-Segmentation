@@ -17,7 +17,7 @@ def dilate(img, k_s=3, it=1):
     kernel = np.ones((k_s, k_s), 'uint8') 
     return cv2.dilate(img, kernel, iterations=it)
 
-def del_small_areas(thresh, area_black=100, area_white=100): 
+def del_small_areas(thresh, area_black=20, area_white=20): 
     result = morphology.remove_small_objects(sk_label(thresh), area_white)
     result[result > 0] = 255 
     result = morphology.remove_small_objects(sk_label(255 - result), area_black)
@@ -26,7 +26,7 @@ def del_small_areas(thresh, area_black=100, area_white=100):
 
 # --- ՏԵՂԵԿՈՒԹՅՈՒՆ ՆԿԱՐՆԵՐԻ ՖԱՅԼԵՐԻ ՄԱՍԻՆ ---
 input_folder = r'C:\Users\User\Desktop\TigranSegmentetion\DataSpecialForTigran'
-output_folder = r'C:\Users\User\Desktop\TigranSegmentetion\Processed4'
+output_folder = r'C:\Users\User\Desktop\TigranSegmentetion\ProcessedWaterShedNew'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -40,11 +40,12 @@ for filename in os.listdir(input_folder):
         print(f"Processing {filename}")
 
         # Adaptive threshold -> erosion -> dilation -> small area removal
+        block_size = 21
         thresh_local_1 = cv2.adaptiveThreshold(
             gray, 255,
             cv2.ADAPTIVE_THRESH_MEAN_C,
-            cv2.THRESH_BINARY_INV,
-            101, 10
+            cv2.THRESH_BINARY,
+            block_size, 10
         )
         thresh_local = del_small_areas(erode(dilate(thresh_local_1)))
 
@@ -54,7 +55,7 @@ for filename in os.listdir(input_folder):
         # Peak local maxima
         local_max = peak_local_max(
             distance,
-            min_distance=50,
+            min_distance=20,
             footprint=np.ones((3, 3)),
             labels=thresh_local.astype(np.int32)
         )
