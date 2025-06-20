@@ -1,1 +1,2 @@
-#1 https://habr.com/ru/companies/otus/articles/849136/  //about openCV
+#1 https://habr.com/ru/companies/otus/articles/849136/  										//about openCV
+#2 https://www.geeksforgeeks.org/machine-learning/implement-canny-edge-detector-in-python-using-opencv/?utm_source=chatgpt.com		//method canny

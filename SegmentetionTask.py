@@ -1,6 +1,9 @@
 import os
 import cv2
 import numpy as np
+from scipy import ndimage as ndi
+from skimage.segmentation import watershed
+from skimage.feature import peak_local_max
 
 # defining the canny detector function
  
@@ -98,7 +101,7 @@ def Canny_detector(img, weak_th = None, strong_th = None):
     return mag
 
 folder_path = r'C:\Users\User\Desktop\TigranSegmentetion\DataSpecialForTigran'
-output_folder = r'C:\Users\User\Desktop\TigranSegmentetion\ProcessedGeeks'
+output_folder = r'C:\Users\User\Desktop\TigranSegmentetion\ProcessedGeeksPlusWaterShed'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -113,10 +116,30 @@ for filename in os.listdir(folder_path):
             print(f"error {filename}")
             continue
         
-        canny_image = Canny_detector(image)
+        canny_edges = Canny_detector(image)
+
+        # Watershed processing
+        distance = ndi.distance_transform_edt(canny_edges)
+        local_max = peak_local_max(distance, min_distance=20, labels=canny_edges, footprint=np.ones((3, 3)))
+
+        mask = np.zeros(distance.shape, dtype=bool)
+        mask[tuple(local_max.T)] = True
+        markers, _ = ndi.label(mask)
+
+        labels = watershed(-distance, markers, mask=canny_edges)
+
+        segmented = np.zeros_like(image)
+        for label in np.unique(labels):
+            if label == 0:
+                continue
+            mask = np.zeros(canny_edges.shape, dtype="uint8")
+            mask[labels == label] = 255
+            cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(segmented, cnts, -1, (0, 0, 255), 1)
+
         name, ext = os.path.splitext(filename)
-        out_path = os.path.join(output_folder, f"{name}_canny.bmp")
-        cv2.imwrite(out_path, canny_image)
+        out_path = os.path.join(output_folder, f"{name}_combined.bmp")
+        cv2.imwrite(out_path, segmented)
         print(f"Saved: {out_path}")
         print(f"Done {filename}")
 
