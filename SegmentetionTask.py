@@ -26,6 +26,10 @@ for filename in os.listdir(input_folder):
         
         mask = gray > 180
 
+        # Added cordinates of marks
+        coords = np.where(mask)
+        y_coords, x_coords = coords[0], coords[1]
+
         image[mask] = [0, 0, 255]  
 
         
